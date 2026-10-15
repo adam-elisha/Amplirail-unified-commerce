@@ -1,22 +1,42 @@
-# Laravel
+# Dependencies
 /vendor/
 /node_modules/
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/bootstrap/cache/*.php
 
 # Environment / secrets
 .env
 .env.*
 !.env.example
-auth.json
+deploy/.env.local
+/auth.json
+
+# Laravel runtime: storage contents (keep the .gitignore files that hold the folder structure)
+/storage/**
+!/storage/**/
+!/storage/**/.gitignore
+/storage/*.key
+/storage/pail
+/storage/app/documents
+/storage/framework/phpstan
+
+# Laravel runtime: cached config/routes/services (may contain live credentials)
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# Backups
+*.bak*
+*.bak-*
+
+# Build output
+/public/build
+/public/hot
+/public/storage
+/database/database.sqlite
 
 # Tooling and caches
+*.log
+.phpactor.json
 .phpunit.result.cache
-.phpunit.cache
+/.phpunit.cache
 .php-cs-fixer.cache
 /.phpstan.cache
 npm-debug.log

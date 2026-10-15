@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: AmpliRail API (launch slice)
+  version: 1.0.0-launch
+  description: >
+    Launch endpoints for the two-week slice. Amounts are integer minor units with an ISO 4217 currency.
+    Every POST requires an Idempotency-Key header. Secret keys use the arsec_sbx_ / arsec_live_ prefixes.
+servers:
+  - url: https://sandbox-api.amplirail.com
+  - url: https://api.amplirail.com
+security:
+  - secretKey: []
+components:
+  securitySchemes:
+    secretKey: { type: http, scheme: bearer, description: "arsec_sbx_... or arsec_live_..." }
+  parameters:
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, maxLength: 128 } }
+  schemas:
+    Money:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor: { type: integer, minimum: 1, example: 2500 }
+        currency: { type: string, pattern: "^[A-Z]{3}$", example: USD }
+    Transaction:
+      type: object
+      properties:
+        id: { type: string, example: txn_8f2a1c9d0b3e4f51 }
+        status: { type: string, enum: [approved, declined, blocked, failed, unknown] }
+        amount_minor: { type: integer }
+        currency: { type: string }
+        reason: { type: string, nullable: true }
+        response_code: { type: string, nullable: true }
+        card: { type: object, properties: { brand: { type: string }, last4: { type: string }, type: { type: string, enum: [credit, debit, prepaid] } } }
+        created_at: { type: string, format: date-time }
+    Error:
+      type: object
+      properties: { error: { type: object, properties: { code: { type: string }, message: { type: string } } } }
+paths:
+  /v1/transactions:
+    post:
+      summary: Create a sale (or authorization with capture=false)
+      parameters: [ { $ref: "#/components/parameters/IdempotencyKey" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, payment_token, order_reference]
+              properties:
+                amount: { $ref: "#/components/schemas/Money" }
+                payment_token: { type: string, description: "Token from AmpliRail Secure Fields (never a card number)", example: tok_sim_approved }
+                order_reference: { type: string }
+                capture: { type: boolean, default: true }
+                customer: { type: object, properties: { email: { type: string }, name: { type: string } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Transaction" } } } }
+        "409": { description: Idempotency key reused with a different request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    get:
+      summary: List transactions
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses: { "200": { description: OK } }
+  /v1/transactions/{id}:
+    get: { summary: Get a transaction, parameters: [ { name: id, in: path, required: true, schema: { type: string } } ], responses: { "200": { description: OK } } }
+  /v1/transactions/{id}/capture:
+    post: { summary: Capture an authorization, parameters: [ { name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" } ], responses: { "200": { description: OK } } }
+  /v1/transactions/{id}/void:
+    post: { summary: Void before settlement, parameters: [ { name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" } ], responses: { "200": { description: OK } } }
+  /v1/refunds:
+    post:
+      summary: Refund all or part of an approved transaction
+      parameters: [ { $ref: "#/components/parameters/IdempotencyKey" } ]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [transaction_id, amount], properties: { transaction_id: { type: string }, amount: { $ref: "#/components/schemas/Money" }, reason: { type: string } } }
+      responses: { "201": { description: Refunded } }
+  /v1/payment_links:
+    post:
+      summary: Create a signed payment link or invoice link (email or SMS delivery optional)
+      parameters: [ { $ref: "#/components/parameters/IdempotencyKey" } ]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [amount, reference], properties: { amount: { $ref: "#/components/schemas/Money" }, reference: { type: string }, expires_in_hours: { type: integer, default: 72 }, send_to: { type: object, properties: { email: { type: string }, phone: { type: string } } } } }
+      responses: { "201": { description: "Link created: https://pay.amplirail.com/l/{token}" } }
+  /v1/payout_statements:
+    get: { summary: List payout statements, responses: { "200": { description: OK } } }
+  /v1/payout_statements/{id}:
+    get:
+      summary: Get a statement (format=json|csv|pdf|xlsx)
+      parameters: [ { name: id, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [json, csv, pdf, xlsx] } } ]
+      responses: { "200": { description: OK } }
+  /v1/webhook_endpoints:
+    post:
+      summary: Register a webhook endpoint (signing secret arwhk_ returned once)
+      requestBody: { content: { application/json: { schema: { type: object, required: [url, events], properties: { url: { type: string }, events: { type: array, items: { type: string, enum: [transaction.approved, transaction.declined, refund.succeeded, payout_statement.issued] } } } } } } }
+      responses: { "201": { description: Created } }

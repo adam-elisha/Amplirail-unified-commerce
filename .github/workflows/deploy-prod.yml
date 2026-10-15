@@ -1,0 +1,36 @@
+name: deploy-prod
+on:
+  release:
+    types: [published]
+permissions:
+  id-token: write
+  contents: read
+concurrency: deploy-prod
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production   # requires approval from the Platform Owner and the Lead PHP Developer (GitHub environment rule)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: us-east-1 }
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push release image
+        run: |
+          IMAGE=${{ steps.ecr.outputs.registry }}/amplirail:${{ github.event.release.tag_name }}
+          docker build -f deploy/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+      - name: Run migrations (owner role task definition)
+        run: aws ecs run-task --cluster amplirail-prod --task-definition amplirail-migrate --launch-type FARGATE --network-configuration "${{ vars.ECS_NETWORK_CONFIG }}" --overrides '{"containerOverrides":[{"name":"app","command":["sh","-c","php artisan migrate --database=pgsql_owner --force && php artisan amplirail:partitions:ensure"]}]}'
+      - name: Deploy with automatic rollback
+        run: |
+          for s in api worker relay scheduler; do
+            aws ecs update-service --cluster amplirail-prod --service $s --force-new-deployment --deployment-configuration "deploymentCircuitBreaker={enable=true,rollback=true}" > /dev/null
+          done
+          aws ecs wait services-stable --cluster amplirail-prod --services api worker relay scheduler
+      - name: Smoke tests
+        run: |
+          curl -fsS https://api.amplirail.com/health
+          curl -fsS -o /dev/null https://admin.amplirail.com/admin/login
+          curl -fsS -o /dev/null https://app.amplirail.com/app/login

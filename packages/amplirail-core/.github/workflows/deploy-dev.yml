@@ -1,0 +1,33 @@
+name: deploy-dev
+on:
+  push:
+    branches: [main]
+permissions:
+  id-token: write
+  contents: read
+concurrency: deploy-dev
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: us-east-1 }
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push image
+        run: |
+          IMAGE=${{ steps.ecr.outputs.registry }}/amplirail:${{ github.sha }}
+          docker build -f deploy/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+      - name: Run migrations
+        run: aws ecs run-task --cluster amplirail-dev --task-definition amplirail-migrate --launch-type FARGATE --network-configuration "${{ vars.ECS_NETWORK_CONFIG }}" --overrides '{"containerOverrides":[{"name":"app","command":["php","artisan","migrate","--force"]}]}'
+      - name: Deploy API and workers
+        run: |
+          aws ecs update-service --cluster amplirail-dev --service api --force-new-deployment
+          aws ecs update-service --cluster amplirail-dev --service worker --force-new-deployment
+          aws ecs wait services-stable --cluster amplirail-dev --services api worker
+      - name: Smoke test
+        run: curl -fsS https://dev.amplirail.com/health

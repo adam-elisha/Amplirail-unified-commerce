@@ -1,0 +1,31 @@
+name: deploy-dev
+on:
+  push:
+    branches: [main]
+permissions:
+  id-token: write
+  contents: read
+concurrency: deploy-dev
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: us-east-1 }
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push image
+        run: |
+          IMAGE=${{ steps.ecr.outputs.registry }}/amplirail:${{ github.sha }}
+          docker build -f deploy/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+      - name: Run migrations (owner role task definition)
+        run: aws ecs run-task --cluster amplirail-dev --task-definition amplirail-migrate --launch-type FARGATE --network-configuration "${{ vars.ECS_NETWORK_CONFIG }}" --overrides '{"containerOverrides":[{"name":"app","command":["sh","-c","php artisan migrate --database=pgsql_owner --force && php artisan amplirail:partitions:ensure"]}]}'
+      - name: Deploy api, worker, relay and scheduler
+        run: |
+          for s in api worker relay scheduler; do aws ecs update-service --cluster amplirail-dev --service $s --force-new-deployment > /dev/null; done
+          aws ecs wait services-stable --cluster amplirail-dev --services api worker relay scheduler
+      - name: Smoke test
+        run: curl -fsS https://dev.amplirail.com/health

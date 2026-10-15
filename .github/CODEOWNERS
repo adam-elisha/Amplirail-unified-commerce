@@ -1,0 +1,12 @@
+# Default owner for everything
+*                         @amplirail/rail-owners
+# Sensitive areas need an owner review (Mohit plus Adam or a named second reviewer)
+/modules/Identity/        @amplirail/rail-owners @amplirail/security-reviewers
+/modules/Tenancy/         @amplirail/rail-owners @amplirail/security-reviewers
+/modules/Ledger/          @amplirail/rail-owners @amplirail/security-reviewers
+/modules/Payments/        @amplirail/rail-owners @amplirail/security-reviewers
+/connectors/              @amplirail/rail-owners @amplirail/security-reviewers
+/infra/                   @amplirail/rail-owners @amplirail/security-reviewers
+/database/migrations/     @amplirail/rail-owners @amplirail/security-reviewers
+/.github/                 @amplirail/rail-owners
+AGENTS.md SECURITY.md CLAUDE.md @amplirail/rail-owners

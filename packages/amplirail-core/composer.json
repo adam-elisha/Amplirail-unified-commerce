@@ -1,0 +1,10 @@
+{
+  "name": "amplipay/amplirail-core",
+  "description": "AmpliRail core payment code: connectors, orchestration, ledger, payout statements (launch slice)",
+  "type": "library",
+  "license": "proprietary",
+  "require": { "php": ">=8.3", "ext-json": "*", "ext-mbstring": "*" },
+  "autoload": { "psr-4": { "AmpliRail\\": "src/" } },
+  "scripts": { "test": "php tests/run.php" },
+  "config": { "sort-packages": true }
+}

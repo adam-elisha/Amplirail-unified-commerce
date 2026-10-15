@@ -1,0 +1,20 @@
+{
+  "version": "TM-2026-10-v1",
+  "currency": "USD",
+  "security_reserve_bps": 500,
+  "payout_method_fees": { "ach": { "minor": 0 }, "wire_intl": { "minor": 7500 }, "usdt": { "bps": 150 } },
+  "lines": [
+    { "section": "bank_card", "label": "Discount rate 8.5%", "basis": "percent_gross", "bps": 850 },
+    { "section": "bank_card", "label": "Transaction fee", "basis": "per_approved", "minor": 50 },
+    { "section": "bank_card", "label": "Credit fee", "basis": "per_refund", "minor": 500 },
+    { "section": "bank_card", "label": "Chargeback fee", "basis": "per_chargeback", "tiers": [ { "max_ratio_bps": 100, "minor": 3500 }, { "max_ratio_bps": null, "minor": 7500 } ] },
+    { "section": "bank_card", "label": "Retrieval fee", "basis": "per_retrieval", "minor": 3500 },
+    { "section": "bank_card", "label": "Re-presentment fee", "basis": "per_representment", "minor": 3500 },
+    { "section": "platform", "label": "Gateway transaction fee", "basis": "per_approved", "minor": 10 },
+    { "section": "platform", "label": "Fraud screening", "basis": "per_approved", "minor": 45 },
+    { "section": "platform", "label": "Gateway chargeback fee", "basis": "per_chargeback", "minor": 500 },
+    { "section": "platform", "label": "Refund fee", "basis": "per_refund", "minor": 500 },
+    { "section": "platform", "label": "Gateway monthly fee", "basis": "monthly", "minor": 1000 },
+    { "section": "platform", "label": "Payout statement fee", "basis": "per_statement", "minor": 2000 }
+  ]
+}
