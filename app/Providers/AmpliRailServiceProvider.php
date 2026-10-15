@@ -152,6 +152,8 @@ final class AmpliRailServiceProvider extends ServiceProvider
             (bool) config('amplirail.webhooks.allow_insecure_targets') && ! $app->environment('production'),
         ));
         $this->app->scoped(StatementService::class);
+        $this->app->scoped(\Modules\RoutePolicy\Contracts\RoutePolicy::class, \Modules\RoutePolicy\Application\RoutePolicyService::class);
+        $this->app->scoped(\Modules\PlatformFees\Contracts\PlatformFees::class, \Modules\PlatformFees\Application\PlatformFeeService::class);
         $this->app->scoped(\Modules\Velocity\Contracts\VelocityCheck::class, \Modules\Velocity\Application\VelocityEngine::class);
         $this->app->scoped(DisputeReports::class, DisputeReportService::class);
         $this->app->scoped(ReserveService::class);

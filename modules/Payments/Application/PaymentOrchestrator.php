@@ -54,6 +54,7 @@ final class PaymentOrchestrator implements PaymentGateway
         private readonly RequestContext $request,
         private readonly Cache $cache,
         private readonly \Modules\Velocity\Contracts\VelocityCheck $velocity,
+        private readonly \Modules\RoutePolicy\Contracts\RoutePolicy $routePolicy,
     ) {}
 
     public function charge(ChargeCommand $c): PaymentOutcome
@@ -89,6 +90,8 @@ final class PaymentOrchestrator implements PaymentGateway
             }
 
             $candidates = (new Router)->candidates($this->accounts->routable($c->merchantId, $c->environment), $c->merchantId, $c->amount->currency, $c->amount->minor);
+            $candidates = $this->routePolicy->order($candidates, new \Modules\RoutePolicy\Contracts\RouteContext($c->merchantId, $c->environment,
+                $c->amount->minor, $c->amount->currency, isset($c->card['bin']) ? (string) $c->card['bin'] : null, $c->card['brand'] ?? null, $c->card['type'] ?? null));
             if ($candidates === []) {
                 return $this->persistCharge($c, $scope, 'failed', 'failed', null, null, 'no_eligible_mid', [], $profile);
             }

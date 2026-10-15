@@ -15,7 +15,6 @@ final class BinPreference
 {
     /**
      * @param  list<string>  $preferredConnectors
-     * @param  array{card_brand?:string|null, card_type?:string|null, issuer_country?:string|null, commercial?:bool|null}  $binInfo
      */
     public function __construct(
         public readonly string $id,

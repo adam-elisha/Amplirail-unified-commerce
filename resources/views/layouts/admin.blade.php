@@ -15,6 +15,8 @@
       ['admin.alerts.index', 'Pre-dispute alerts', 'payments.view'],
       ['admin.disputes.analytics', 'Chargeback outcomes', 'payments.view'],
       ['admin.risk.velocity', 'Velocity and limits', 'risk.view'],
+      ['admin.mids.index', 'MID management', 'routing.view'],
+      ['admin.bins.index', 'BIN routing', 'routing.view'],
       ['admin.routing', 'Routing and eligibility', 'routing.view'],
       ['admin.risk.vamp', 'Network monitoring (VAMP)', 'risk.view'],
     ],
@@ -22,6 +24,7 @@
       ['admin.statements.index', 'Payout statements', 'fees.view'],
       ['admin.recon.index', 'Reconciliation', 'recon.view'],
       ['admin.reserves.index', 'Reserves', 'fees.view'],
+      ['admin.platform-fees.index', 'Platform fees', 'fees.view'],
     ],
     'Platform' => [
       ['admin.management', 'Management', 'audit.view'],

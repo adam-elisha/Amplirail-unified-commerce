@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminStepUpController;
 use App\Http\Controllers\Admin\AlertController;
+use App\Http\Controllers\Admin\BinRoutingController;
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\DevelopersController;
 use App\Http\Controllers\Admin\DisputeAnalyticsController;
@@ -11,8 +12,10 @@ use App\Http\Controllers\Admin\DisputeController;
 use App\Http\Controllers\Admin\ManagementController;
 use App\Http\Controllers\Admin\MerchantActionController;
 use App\Http\Controllers\Admin\MerchantController;
+use App\Http\Controllers\Admin\MidControlController;
 use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\PartnerController;
+use App\Http\Controllers\Admin\PlatformFeeController;
 use App\Http\Controllers\Admin\ReconciliationController;
 use App\Http\Controllers\Admin\ReserveController;
 use App\Http\Controllers\Admin\RiskMonitoringController;
@@ -145,6 +148,17 @@ $admin->group(function (): void {
     Route::post('alerts/client', [AlertController::class, 'createClient'])->middleware('permission:settings.security.manage')->name('alerts.client');
     Route::get('disputes-analytics', [DisputeAnalyticsController::class, 'index'])->middleware('permission:payments.view')->name('disputes.analytics');
     Route::post('disputes/{dispute}/evidence', [DisputeEvidenceController::class, 'store'])->middleware('permission:payments.refund')->name('disputes.evidence');
+
+    // MID management, BIN routing and platform fees (round 6).
+    Route::get('mids', [MidControlController::class, 'index'])->middleware('permission:routing.view')->name('mids.index');
+    Route::post('mids/{mid}', [MidControlController::class, 'update'])->middleware('permission:merchants.limits.edit')->name('mids.update');
+    Route::get('bin-routing', [BinRoutingController::class, 'index'])->middleware('permission:routing.view')->name('bins.index');
+    Route::post('bin-routing', [BinRoutingController::class, 'store'])->middleware('permission:routing.draft')->name('bins.store');
+    Route::post('bin-routing/import', [BinRoutingController::class, 'import'])->middleware('permission:routing.draft')->name('bins.import');
+    Route::post('bin-routing/{pref}/toggle', [BinRoutingController::class, 'toggle'])->middleware('permission:routing.draft')->name('bins.toggle');
+    Route::get('platform-fees', [PlatformFeeController::class, 'index'])->middleware('permission:fees.view')->name('platform-fees.index');
+    Route::post('platform-fees', [PlatformFeeController::class, 'store'])->middleware('permission:fees.manage')->name('platform-fees.store');
+    Route::post('platform-fees/{rule}/toggle', [PlatformFeeController::class, 'toggle'])->middleware('permission:fees.manage')->name('platform-fees.toggle');
 
     Route::get('statements', [StatementController::class, 'index'])->middleware('permission:fees.view')->name('statements.index');
     Route::post('statements/generate', [StatementController::class, 'generate'])->middleware('permission:fees.manage')->name('statements.generate');

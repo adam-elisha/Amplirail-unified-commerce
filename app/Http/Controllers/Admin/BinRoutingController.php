@@ -66,6 +66,9 @@ final class BinRoutingController extends AdminController
         $this->requirePermission($request, 'routing.draft');
         $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:20480']]);
         $fh = fopen((string) $request->file('file')?->getRealPath(), 'r');
+        if ($fh === false) {
+            return back()->with('error', 'The uploaded file could not be read.');
+        }
         $header = array_map(fn ($h) => strtolower(trim((string) $h)), (array) fgetcsv($fh));
         if (! in_array('bin_prefix', $header, true)) {
             return back()->with('error', 'The CSV needs a bin_prefix column.');

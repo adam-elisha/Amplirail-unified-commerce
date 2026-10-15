@@ -21,6 +21,7 @@ use Modules\Disputes\Contracts\DisputeReports;
 use Modules\Events\Contracts\Outbox;
 use Modules\Ledger\Contracts\Ledger;
 use Modules\Onboarding\Contracts\MerchantDirectory;
+use Modules\PlatformFees\Contracts\PlatformFees;
 use Modules\Payments\Contracts\PaymentReports;
 use Modules\Routing\Contracts\MerchantAccounts;
 use Modules\Settlement\Infrastructure\FeeAgreement;
@@ -44,6 +45,7 @@ final class StatementService implements ApprovalHandler
         private readonly Outbox $outbox,
         private readonly AuditTrail $audit,
         private readonly DisputeReports $disputes,
+        private readonly PlatformFees $platformFees,
     ) {}
 
     /**
@@ -114,6 +116,12 @@ final class StatementService implements ApprovalHandler
             $result['lines'][] = ['section' => 'activity', 'label' => 'Chargebacks won (returned)', 'amount' => $won];
             $result['net'] = $result['net']->plus($won);
         }
+        // Partner markups (platform fees) from active rules in the statement currency.
+        $platform = $this->platformFees->forStatement($merchantId, $schedule->currency, $gross, $approvedCount);
+        foreach ($platform as $pf) {
+            $result['lines'][] = ['section' => 'fees', 'label' => 'Platform fee: '.$pf['partner_name'], 'amount' => Money::of(-$pf['amount_minor'], $schedule->currency)];
+            $result['net'] = $result['net']->minus(Money::of($pf['amount_minor'], $schedule->currency));
+        }
 
         $statement = PayoutStatement::query()->create([
             'id' => Ids::new('ps'),
@@ -125,7 +133,7 @@ final class StatementService implements ApprovalHandler
             'currency' => $schedule->currency,
             'fee_schedule_id' => $schedule->id,
             'fee_schedule_version' => $schedule->version,
-            'input' => get_object_vars($input),
+            'input' => get_object_vars($input) + ['platform_fees' => $platform],
             'lines' => array_map(fn ($l) => ['section' => $l['section'], 'label' => $l['label'], 'amount_minor' => $l['amount']->minor], $result['lines']),
             'gross_minor' => $result['gross']->minor,
             'fees_minor' => $result['fees']->minor,
@@ -179,6 +187,13 @@ final class StatementService implements ApprovalHandler
         if ($s->reserve_minor !== 0) {
             $lines[] = ['merchant_payable:'.$s->merchant_id, Money::of($s->reserve_minor, $c)];
             $lines[] = ['reserve:'.$s->merchant_id, Money::of(-$s->reserve_minor, $c)];
+        }
+        foreach ((array) ($s->input['platform_fees'] ?? []) as $pf) {
+            $amt = (int) ($pf['amount_minor'] ?? 0);
+            if ($amt > 0) {
+                $lines[] = ['merchant_payable:'.$s->merchant_id, Money::of($amt, $c)];
+                $lines[] = ['partner_payable:'.$pf['partner_key'], Money::of(-$amt, $c)];
+            }
         }
         if ($lines !== []) {
             $this->ledger->post('payout_statement', $s->id, $environment, $lines);
