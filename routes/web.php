@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\Admin\ReconciliationController;
 use App\Http\Controllers\Admin\ReserveController;
+use App\Http\Controllers\Admin\RiskMonitoringController;
 use App\Http\Controllers\Admin\RoutingController;
 use App\Http\Controllers\Admin\StatementController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -124,6 +125,10 @@ $admin->group(function (): void {
     Route::get('partners', [PartnerController::class, 'index'])->middleware('permission:platform.emergency_override')->name('partners.index');
     Route::post('partners', [PartnerController::class, 'store'])->middleware('permission:platform.emergency_override')->name('partners.store');
     Route::post('partners/{org}', [PartnerController::class, 'update'])->middleware('permission:platform.emergency_override')->name('partners.update');
+
+    // Network fraud reports and Visa VAMP monitoring (round 4).
+    Route::get('risk/vamp', [RiskMonitoringController::class, 'index'])->middleware('permission:risk.view')->name('risk.vamp');
+    Route::post('risk/vamp/import', [RiskMonitoringController::class, 'import'])->middleware('permission:risk.decide')->name('risk.vamp.import');
 
     Route::get('statements', [StatementController::class, 'index'])->middleware('permission:fees.view')->name('statements.index');
     Route::post('statements/generate', [StatementController::class, 'generate'])->middleware('permission:fees.manage')->name('statements.generate');

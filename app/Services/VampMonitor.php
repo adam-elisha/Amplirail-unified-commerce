@@ -48,9 +48,9 @@ final class VampMonitor
         $allUnmatched = 0;
         foreach ($merchants as $mid) {
             $f = $fraud->where('merchant_id', $mid);
-            $fIds = $f->pluck('transaction_id')->filter()->values()->all();
+            $fIds = array_values(array_map('strval', $f->pluck('transaction_id')->filter()->all()));
             $unmatched = $f->whereNull('transaction_id')->count();
-            $dIds = $disputes->where('merchant_id', $mid)->pluck('transaction_id')->values()->all();
+            $dIds = array_values(array_map('strval', $disputes->where('merchant_id', $mid)->pluck('transaction_id')->all()));
             $settledCount = (int) ($settled[$mid] ?? 0);
             $r = VampCalculator::ratio($fIds, $dIds, $unmatched, $settledCount);
             $rows[] = [

@@ -13,6 +13,7 @@
       ['admin.transactions.index', 'Transactions', 'payments.view'],
       ['admin.disputes.index', 'Disputes and chargebacks', 'payments.view'],
       ['admin.routing', 'Routing and eligibility', 'routing.view'],
+      ['admin.risk.vamp', 'Network monitoring (VAMP)', 'risk.view'],
     ],
     'Money' => [
       ['admin.statements.index', 'Payout statements', 'fees.view'],
