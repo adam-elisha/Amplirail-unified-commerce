@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Architecture">
+            <directory>tests/Architecture</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+            <directory>modules</directory>
+            <directory>connectors</directory>
+        </include>
+    </source>
+    <php>
+        <!-- Tests only: architecture tests parse the whole codebase; shared-hosting PHP often defaults to 128M. -->
+        <ini name="memory_limit" value="1G"/>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:dGVzdC1vbmx5LWFwcC1rZXktMzItYnl0ZXMtbG9uZyE="/>
+        <env name="APP_URL" value="http://localhost"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="ARGON_MEMORY" value="1024"/>
+        <env name="ARGON_TIME" value="1"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="SECRETS_DRIVER" value="array"/>
+        <env name="OUTBOX_PUBLISHER" value="null"/>
+        <env name="DOCUMENTS_DISK" value="documents"/>
+        <env name="WEBHOOKS_ALLOW_INSECURE_TARGETS" value="true"/>
+        <env name="FEATURE_CRM_HANDOFF" value="true"/>
+        <env name="AMPLIRAIL_DEFAULT_TENANT" value="org_edatapay"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>

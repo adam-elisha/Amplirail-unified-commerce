@@ -1,0 +1,17 @@
+# AmpliRail queue worker (webhook deliveries, KYB/risk jobs, emails). Install:
+#   sudo cp deploy/server/systemd/amplirail-*.service /etc/systemd/system/
+#   sudo sed -i 's|__APP__|/home/USER/amplirail/amplirail-unified-commerce|g; s|__USER__|USER|g; s|__PHP__|'$(command -v php83 || command -v php)'|g' /etc/systemd/system/amplirail-*.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now amplirail-worker amplirail-relay
+[Unit]
+Description=AmpliRail queue worker
+After=network.target postgresql-17.service
+
+[Service]
+User=__USER__
+WorkingDirectory=__APP__
+ExecStart=__PHP__ __APP__/artisan queue:work --tries=3 --backoff=30 --max-time=3600
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

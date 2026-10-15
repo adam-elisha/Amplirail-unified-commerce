@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./storage/keys/**)",
+      "Bash(git push --force:*)",
+      "Bash(terraform apply:*)",
+      "Bash(aws:*)",
+      "Bash(git push origin main:*)"
+    ]
+  }
+}

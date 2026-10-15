@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Full suite against real PostgreSQL 16 (RLS, partitions, append-only triggers, role grants).
+  Needs a NON-superuser owner role (superusers bypass RLS) and a runtime role (DB_APP_ROLE, default amplirail_app).
+  Point it at a SEPARATE test database: the suite drops and recreates every table.
+    CREATE ROLE amplirail LOGIN PASSWORD '...' CREATEDB; CREATE ROLE amplirail_app LOGIN PASSWORD '...';
+    CREATE DATABASE amplirail_test OWNER amplirail;
+  Then: composer test:pgsql   (override DB_* below with real environment variables in CI)
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Postgres">
+            <directory>tests/Postgres</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <!-- Tests only: shared-hosting PHP often defaults to 128M. -->
+        <ini name="memory_limit" value="1G"/>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:dGVzdC1vbmx5LWFwcC1rZXktMzItYnl0ZXMtbG9uZyE="/>
+        <env name="APP_URL" value="http://localhost"/>
+        <env name="ARGON_MEMORY" value="1024"/>
+        <env name="ARGON_TIME" value="1"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_HOST" value="127.0.0.1" force="false"/>
+        <env name="DB_PORT" value="5432" force="false"/>
+        <env name="DB_DATABASE" value="amplirail_test" force="false"/>
+        <env name="DB_USERNAME" value="amplirail" force="false"/>
+        <env name="DB_PASSWORD" value="" force="false"/>
+        <env name="DB_APP_ROLE" value="amplirail_app" force="false"/>
+        <env name="DB_APP_PASSWORD" value="" force="false"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="SECRETS_DRIVER" value="array"/>
+        <env name="OUTBOX_PUBLISHER" value="null"/>
+        <env name="WEBHOOKS_ALLOW_INSECURE_TARGETS" value="true"/>
+        <env name="FEATURE_CRM_HANDOFF" value="true"/>
+        <env name="AMPLIRAIL_DEFAULT_TENANT" value="org_edatapay"/>
+    </php>
+</phpunit>

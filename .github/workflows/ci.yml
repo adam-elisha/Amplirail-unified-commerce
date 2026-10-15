@@ -1,0 +1,67 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (core, sqlite, static analysis, architecture)
+    runs-on: ubuntu-latest
+    steps:
+      # After the first green run, pin every action to its full commit SHA (Dependabot keeps them updated).
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "8.3", extensions: "pdo_sqlite, pdo_pgsql, intl, zip, bcmath", coverage: none }
+      - run: cp .env.example .env && composer install --no-interaction --prefer-dist --no-progress
+      - run: composer audit
+      - name: Core package checksums (core is frozen; changes need a new version)
+        working-directory: packages/amplirail-core
+        run: sha256sum -c SHA256SUMS
+      - run: composer core
+      - run: composer stan
+      - run: composer arch
+      - run: composer contract
+      - run: php artisan config:clear && vendor/bin/pest --exclude-group=architecture
+
+  test-pgsql:
+    name: test (PostgreSQL 16: RLS, partitions, triggers, grants)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: postgres }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "8.3", extensions: "pdo_pgsql, intl, zip, bcmath", coverage: none }
+      - name: Create non-superuser owner and runtime roles (superusers would bypass RLS)
+        env: { PGPASSWORD: postgres }
+        run: |
+          psql -h 127.0.0.1 -U postgres -c "CREATE ROLE amplirail LOGIN PASSWORD 'ci-owner' CREATEDB;"
+          psql -h 127.0.0.1 -U postgres -c "CREATE ROLE amplirail_app LOGIN PASSWORD 'ci-app';"
+          psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE amplirail_test OWNER amplirail;"
+      - run: cp .env.example .env && composer install --no-interaction --prefer-dist --no-progress
+      - run: composer test:pgsql
+        env: { DB_HOST: 127.0.0.1, DB_PORT: "5432", DB_PASSWORD: ci-owner, DB_APP_ROLE: amplirail_app, DB_APP_PASSWORD: ci-app }
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx --yes @redocly/cli@latest lint openapi/amplirail-v1.yaml --skip-rule operation-4xx-response --skip-rule no-server-example.com

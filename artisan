@@ -1,0 +1,31 @@
+#!/usr/bin/env php
+<?php
+
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+// AmpliRail install checks: explain the two common install mistakes instead of a stack trace.
+if (! is_file(__DIR__.'/vendor/autoload.php')) {
+    fwrite(STDERR, "AmpliRail: the vendor/ folder is missing in ".__DIR__."\n"
+        ."The release zip ships with vendor/. Unzip the whole package again into a NEW EMPTY folder\n"
+        ."(see deploy/server/INSTALL_CWP_ALMALINUX.md, step 2), or run: php83 \"\$(command -v composer)\" install\n");
+    exit(1);
+}
+if (str_contains(str_replace('\\', '/', __DIR__).'/', '/public_html/')) {
+    fwrite(STDERR, "AmpliRail WARNING: the app is inside public_html (".__DIR__.").\n"
+        ."Files such as .env may be downloadable from the internet. Install it outside public_html and point\n"
+        ."the website only at the app's public/ folder (INSTALL_CWP_ALMALINUX.md, steps 0 to 3).\n\n");
+}
+
+// Register the Composer autoloader...
+require __DIR__.'/vendor/autoload.php';
+
+// Bootstrap Laravel and handle the command...
+/** @var Application $app */
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand(new ArgvInput);
+
+exit($status);
