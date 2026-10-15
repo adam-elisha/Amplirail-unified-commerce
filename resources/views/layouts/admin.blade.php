@@ -22,12 +22,13 @@
     'Platform' => [
       ['admin.management', 'Management', 'audit.view'],
       ['admin.developers', 'Developers and system', 'merchants.view'],
+      ['admin.partners.index', 'Private label partners', 'platform.emergency_override'],
     ],
   ];
 @endphp
 <div class="shell">
   <aside class="sidebar" aria-label="Admin navigation">
-    <a class="brand" href="{{ route('admin.overview') }}"><span class="brand-mark">A</span><span><strong>AmpliRail</strong><span>Admin console</span></span></a>
+    <a class="brand" href="{{ route('admin.overview') }}">@include('partials.brand-mark')<span><strong>{{ $brand->name ?? 'AmpliRail' }}</strong><span>Admin console</span></span></a>
     @foreach ($nav as $group => $items)
       <div class="nav-group">{{ $group }}</div>
       <nav class="nav">

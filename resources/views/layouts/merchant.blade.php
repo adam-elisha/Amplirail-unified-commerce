@@ -16,7 +16,7 @@
 @endphp
 <div class="shell">
   <aside class="sidebar" aria-label="Merchant navigation">
-    <a class="brand" href="{{ route('merchant.dashboard') }}"><span class="brand-mark">A</span><span><strong>AmpliRail</strong><span>Merchant portal</span></span></a>
+    <a class="brand" href="{{ route('merchant.dashboard') }}">@include('partials.brand-mark')<span><strong>{{ $brand->name ?? 'AmpliRail' }}</strong><span>Merchant portal</span></span></a>
     <nav class="nav">
       @foreach ($nav as [$route, $label, $perm])
         @if ($can($perm))

@@ -27,7 +27,7 @@ final class BrandResolver
             }
             $r = BrandRecord::query()->where('status', 'active')->whereJsonContains('hosts', $host)->first();
 
-            return $r?->tenant_id ?? '';
+            return $r->tenant_id ?? '';
         });
 
         return $tenantId === '' ? Brand::platform() : $this->forTenant($tenantId);

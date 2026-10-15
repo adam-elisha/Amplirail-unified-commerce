@@ -85,7 +85,7 @@ final class PartnerController extends AdminController
             return back()->with('error', 'The logo must be a PNG, JPEG or SVG of at most 200 KB.');
         }
         $existing = BrandRecord::query()->where('tenant_id', $node->id)->first();
-        $old = $existing?->hosts ?? [];
+        $old = $existing->hosts ?? [];
         $data = $this->brandData($v, $hosts, $logo ?? $existing?->logo_data);
         if ($request->boolean('remove_logo')) {
             $data['logo_data'] = null;

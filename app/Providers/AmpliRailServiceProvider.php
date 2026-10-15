@@ -78,6 +78,7 @@ final class AmpliRailServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(RequestContext::class);
+        $this->app->scoped(\App\Support\Branding\BrandResolver::class); // ApplyBrand sets the brand that SignInController reads
         $this->app->scoped(TenantScope::class, TenantManager::class);
         $this->app->scoped(OrgDirectory::class, EloquentOrgDirectory::class);
         $this->app->scoped(AuditTrail::class, DatabaseAuditTrail::class);

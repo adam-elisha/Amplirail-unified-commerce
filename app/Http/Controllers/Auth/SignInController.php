@@ -65,6 +65,11 @@ final class SignInController
             return back()->withInput(['email' => $data['email']])->with('error', 'Email or password is incorrect.');
         }
 
+        $brand = app(\App\Support\Branding\BrandResolver::class)->current();
+        if ($brand->tenantId !== null && $user->primaryMembership()?->tenant_id !== $brand->tenantId) {
+            return back()->withInput(['email' => $data['email']])->with('error', 'Email or password is incorrect.');
+        }
+
         $request->session()->regenerate();
         $request->session()->put(['auth.pending' => $user->id, 'auth.portal' => $portal]);
 
