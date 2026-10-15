@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminStepUpController;
+use App\Http\Controllers\Admin\AlertController;
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\DevelopersController;
+use App\Http\Controllers\Admin\DisputeAnalyticsController;
 use App\Http\Controllers\Admin\DisputeController;
 use App\Http\Controllers\Admin\ManagementController;
 use App\Http\Controllers\Admin\MerchantActionController;
@@ -17,9 +19,12 @@ use App\Http\Controllers\Admin\RiskMonitoringController;
 use App\Http\Controllers\Admin\RoutingController;
 use App\Http\Controllers\Admin\StatementController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\VelocityController;
 use App\Http\Controllers\Auth\SignInController;
+use App\Http\Controllers\DisputeEvidenceController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Merchant\MerchantAlertController;
 use App\Http\Controllers\Merchant\MerchantDisputeController;
 use App\Http\Controllers\Merchant\MerchantPortalController;
 use App\Http\Controllers\PayController;
@@ -130,6 +135,17 @@ $admin->group(function (): void {
     Route::get('risk/vamp', [RiskMonitoringController::class, 'index'])->middleware('permission:risk.view')->name('risk.vamp');
     Route::post('risk/vamp/import', [RiskMonitoringController::class, 'import'])->middleware('permission:risk.decide')->name('risk.vamp.import');
 
+    // Velocity limits, pre-dispute alerts, chargeback outcomes and dispute evidence (round 5).
+    Route::get('risk/velocity', [VelocityController::class, 'index'])->middleware('permission:risk.view')->name('risk.velocity');
+    Route::post('risk/velocity', [VelocityController::class, 'store'])->middleware('permission:merchants.limits.edit')->name('risk.velocity.store');
+    Route::post('risk/velocity/{rule}/toggle', [VelocityController::class, 'toggle'])->middleware('permission:merchants.limits.edit')->name('risk.velocity.toggle');
+    Route::get('alerts', [AlertController::class, 'index'])->middleware('permission:payments.view')->name('alerts.index');
+    Route::post('alerts/settings', [AlertController::class, 'settings'])->middleware('permission:payments.refund')->name('alerts.settings');
+    Route::post('alerts/manual', [AlertController::class, 'manual'])->middleware('permission:payments.refund')->name('alerts.manual');
+    Route::post('alerts/client', [AlertController::class, 'createClient'])->middleware('permission:settings.security.manage')->name('alerts.client');
+    Route::get('disputes-analytics', [DisputeAnalyticsController::class, 'index'])->middleware('permission:payments.view')->name('disputes.analytics');
+    Route::post('disputes/{dispute}/evidence', [DisputeEvidenceController::class, 'store'])->middleware('permission:payments.refund')->name('disputes.evidence');
+
     Route::get('statements', [StatementController::class, 'index'])->middleware('permission:fees.view')->name('statements.index');
     Route::post('statements/generate', [StatementController::class, 'generate'])->middleware('permission:fees.manage')->name('statements.generate');
     Route::post('statements/{statement}/submit', [StatementController::class, 'submit'])->middleware('permission:fees.manage')->name('statements.submit');
@@ -178,6 +194,9 @@ $merchant->group(function (): void {
     Route::get('disputes/{dispute}', [MerchantDisputeController::class, 'show'])->middleware('permission:payments.view')->name('disputes.show');
     Route::post('disputes/{dispute}/respond', [MerchantDisputeController::class, 'respond'])->middleware('permission:payments.refund')->name('disputes.respond');
     Route::post('disputes/{dispute}/accept', [MerchantDisputeController::class, 'accept'])->middleware('permission:payments.refund')->name('disputes.accept');
+    Route::post('disputes/{dispute}/evidence', [DisputeEvidenceController::class, 'store'])->middleware('permission:payments.refund')->name('disputes.evidence');
+    Route::get('alerts', [MerchantAlertController::class, 'index'])->middleware('permission:payments.view')->name('alerts.index');
+    Route::post('alerts/settings', [MerchantAlertController::class, 'settings'])->middleware('permission:payments.refund')->name('alerts.settings');
     Route::get('documents/{document}/download', [DocumentDownloadController::class, 'merchant'])->middleware(['signed', 'permission:documents.view'])->name('documents.download');
 });
 

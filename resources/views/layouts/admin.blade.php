@@ -12,6 +12,9 @@
     'Payments' => [
       ['admin.transactions.index', 'Transactions', 'payments.view'],
       ['admin.disputes.index', 'Disputes and chargebacks', 'payments.view'],
+      ['admin.alerts.index', 'Pre-dispute alerts', 'payments.view'],
+      ['admin.disputes.analytics', 'Chargeback outcomes', 'payments.view'],
+      ['admin.risk.velocity', 'Velocity and limits', 'risk.view'],
       ['admin.routing', 'Routing and eligibility', 'routing.view'],
       ['admin.risk.vamp', 'Network monitoring (VAMP)', 'risk.view'],
     ],

@@ -30,6 +30,11 @@ Route::middleware(['auth.service:merchants.read', 'throttle:api'])->group(functi
     Route::get('onboarding/command_center', [MerchantApiController::class, 'commandCenter'])->name('api.onboarding.command_center');
 });
 
+// Pre-dispute alert partners (Ethoca / Verifi and resellers). Repeating an alert_id returns the first answer.
+Route::middleware(['auth.service:alerts.write', 'throttle:api'])->group(function (): void {
+    Route::post('alerts', [\App\Http\Controllers\Api\AlertApiController::class, 'store'])->name('api.alerts.store');
+});
+
 // Merchant secret keys.
 Route::middleware(['auth.apikey', 'idempotent', 'throttle:api'])->group(function (): void {
     Route::get('merchant', [MerchantApiController::class, 'self'])->name('api.merchant.self');

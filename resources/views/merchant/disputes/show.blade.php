@@ -29,6 +29,7 @@
         @endif
       </section>
     @endif
+    @include('merchant.disputes.partials.documents', ['d' => $d, 'portal' => 'merchant'])
     <section class="card">
       <h2>History</h2>
       <div class="timeline">

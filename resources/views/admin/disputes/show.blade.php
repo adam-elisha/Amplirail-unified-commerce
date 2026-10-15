@@ -38,6 +38,7 @@
         <p class="muted">No response yet.</p>
       @endif
     </section>
+    @include('merchant.disputes.partials.documents', ['d' => $d, 'portal' => 'admin'])
 
     <section class="card">
       <h2>Ledger</h2><div class="muted small">Append-only double entry. A chargeback reduces what the merchant is owed; a win reverses it.</div>

@@ -18,7 +18,7 @@ final class CreateServiceClientCommand extends Command
     {
         $tenantId = (string) ($this->option('tenant') ?: config('amplirail.default_tenant'));
         $scopes = array_values(array_filter(array_map('trim', explode(',', (string) $this->option('scopes')))));
-        $allowed = ['crm.handoff', 'merchants.read', 'risk.events'];
+        $allowed = ['crm.handoff', 'merchants.read', 'risk.events', 'alerts.write'];
         if (array_diff($scopes, $allowed) !== []) {
             $this->error('Allowed scopes: '.implode(', ', $allowed));
 

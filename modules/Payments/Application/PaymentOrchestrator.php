@@ -53,6 +53,7 @@ final class PaymentOrchestrator implements PaymentGateway
         private readonly Outbox $outbox,
         private readonly RequestContext $request,
         private readonly Cache $cache,
+        private readonly \Modules\Velocity\Contracts\VelocityCheck $velocity,
     ) {}
 
     public function charge(ChargeCommand $c): PaymentOutcome
@@ -81,6 +82,11 @@ final class PaymentOrchestrator implements PaymentGateway
             if (! $screen['allow']) {
                 return $this->persistCharge($c, $scope, 'blocked', 'blocked', null, null, $screen['reason'] ?? 'blocked', [], $profile);
             }
+            $vin = new \Modules\Velocity\Contracts\VelocityInput($c->merchantId, $c->environment, $c->amount->minor, $c->amount->currency,
+                hash('sha256', $c->paymentToken), isset($c->card['bin']) ? (string) $c->card['bin'] : null, $c->card['brand'] ?? null);
+            if ($this->velocity->check($vin) !== null) {
+                return $this->persistCharge($c, $scope, 'blocked', 'blocked', null, null, 'velocity_limit', [], $profile);
+            }
 
             $candidates = (new Router)->candidates($this->accounts->routable($c->merchantId, $c->environment), $c->merchantId, $c->amount->currency, $c->amount->minor);
             if ($candidates === []) {
@@ -89,6 +95,9 @@ final class PaymentOrchestrator implements PaymentGateway
 
             $attempts = [];
             foreach ($candidates as $mid) {
+                if (! $this->velocity->allowsConnector($vin, $mid->connector)) {
+                    continue; // processor limit reached for this route; no provider call was made
+                }
                 $req = new PaymentRequest($c->idempotencyKey.':'.$mid->id, $mid->id, $c->amount, $c->paymentToken, $c->orderReference,
                     initiator: $c->initiator, metadata: $c->metadata);
                 [$res, $latency] = $this->call($mid->connector, $c->capture ? 'sale' : 'authorize', $req);

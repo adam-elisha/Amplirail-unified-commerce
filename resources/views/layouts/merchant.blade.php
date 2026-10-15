@@ -7,6 +7,7 @@
     ['merchant.dashboard', 'Dashboard', 'payments.view'],
     ['merchant.transactions.index', 'Transactions and reports', 'payments.view'],
     ['merchant.disputes.index', 'Disputes', 'payments.view'],
+    ['merchant.alerts.index', 'Dispute alerts', 'payments.view'],
     ['merchant.terminal', 'Virtual terminal', 'payments.refund'],
     ['merchant.links.index', 'Payment requests', 'payments.refund'],
     ['merchant.statements.index', 'Payout statements', 'fees.view'],
